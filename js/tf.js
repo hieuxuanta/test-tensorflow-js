@@ -6,18 +6,30 @@
  * Get the car data reduced to just the variables we are interested
  * and cleaned of missing data.
  */
+var testingData = [];
+var cleanedTest = [];
 async function getData() {
   const carsDataResponse = await fetch(
     "https://storage.googleapis.com/tfjs-tutorials/carsData.json"
   );
   const carsData = await carsDataResponse.json();
-  const cleaned = carsData
+  // console.log(carsData);
+  // console.log(carsDataResponse);
+  const trainingData = carsData.slice(0, 324);
+  testingData = carsData.slice(324, 406);
+  // console.log(trainingData);
+  const cleaned = trainingData
     .map((car) => ({
       mpg: car.Miles_per_Gallon,
       horsepower: car.Horsepower,
     }))
     .filter((car) => car.mpg != null && car.horsepower != null);
-
+  // console.log(cleaned);
+  cleanedTest = testingData
+    .map((car) => ({
+      mpg: car.Miles_per_Gallon,
+      horsepower: car.Horsepower,
+    }));
   return cleaned;
 }
 
@@ -30,7 +42,11 @@ function createModel() {
   model.add(tf.layers.dense({ inputShape: [1], units: 1, useBias: true }));
 
   //bz--I'll try to add some hidden layers
-  // model.add(tf.layers.activation({activation: 'tanh'}));
+
+  
+  model.add(tf.layers.dense({units: 60, activation: 'relu'}));
+  //omg, when I add the above layer, it predicted so great. But how did it work?
+  //But, it's randomly true and false. The predicted result is not in the true path usually.
   
 
   // Add an output layer
@@ -56,9 +72,11 @@ function convertToTensor(data){
     
     // Step 2. Convert data to Tensor
     const inputs = data.map(d => d.horsepower);
+    // alert("This is input \n" + inputs);
     const labels = data.map(d => d.mpg);
 
     const inputTensor = tf.tensor2d(inputs, [inputs.length, 1]); // Convert to tensor .tensor2d(<array>,<shape_with_param_rowthencol-optional>,<dtype-optional>)
+    // alert("This is inputTensor \n" + inputTensor);
     const labelTensor = tf.tensor2d(labels, [labels.length, 1]);
 
     // Step 3. Normalize the data to the range 0 - 1 using min-max scaling
@@ -92,7 +110,7 @@ async function trainModel(model, inputs, labels){
     metrics: ['mse'],
   });
 
-  const batchSize = 32;
+  const batchSize = 25;
   const epochs = 50;
   
   return await model.fit(inputs, labels, {
@@ -107,8 +125,9 @@ async function trainModel(model, inputs, labels){
   })
 }
 
+
 // 7. Make predictions
-function testModel(model, inputData, normalizationData){
+function testModel(model, inputData, inputDataTesting, normalizationData){
   const {inputMax, inputMin, labelMax, labelMin} = normalizationData;
 
   // Generate predictions for a uniform range of numbers between 0 and 1;
@@ -133,13 +152,17 @@ function testModel(model, inputData, normalizationData){
     return {x: val, y: preds[i]}
   });
 
-  const originalPoints = inputData.map(d => ({
+  const originalPointsTraining = inputData.map(d => ({
+    x: d.horsepower, y: d.mpg,
+  }));
+
+  const originalPointsTesting = inputDataTesting.map(d => ({
     x: d.horsepower, y: d.mpg,
   }));
 
   tfvis.render.scatterplot(
-    {name: 'Model Predictions vs Original Data'},
-    {values: [originalPoints, predictedPoints], series: ['original', 'predicted']},
+    {name: 'Model Predictions vs Original Data (Training & Testing)'},
+    {values: [originalPointsTraining, originalPointsTesting, predictedPoints], series: ['origTraining', 'origTesting', 'predicted']},
     {
       xLabel: 'Horsepower',
       yLabel: 'MPG',
@@ -182,7 +205,7 @@ async function run() {
   console.log('Done Training.....');
 
   // Make some predictions using the model and compare them to the original data
-  testModel(model, data, tensorData);
+  testModel(model, data, cleanedTest, tensorData);
 }
 
 document.addEventListener("DOMContentLoaded", run);
