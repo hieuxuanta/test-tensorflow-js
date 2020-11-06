@@ -1,0 +1,86 @@
+*{
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+#btnDownload{
+    position: relative !important;
+    display: block;
+  outline: none;
+  border: none;
+  background-color: #81256c;
+  font-size: 1em;
+  font-weight: 600;
+  background-size: 100% 100%;
+  color: #fff;
+  border-radius: 20px;
+  box-shadow: 0 0 0 3px #81256c inset;
+  width: 200px;
+  height: 50px;
+  /* margin-left: 50%; */
+  margin-top: 20px;
+  /* transform: translate(-50%,-50%);  */
+  transition: all 0.3s ease-in-out;
+}
+#btnDownload:hover{
+    cursor: pointer;
+    background-color: #fff;
+    border: #fff solid 2px;
+    color: #000;
+    transition: all 0.3s ease-in-out;
+}
+.lblbtnUpload{
+    position: relative !important;
+    display: block;
+  outline: none;
+  border: none;
+  background-color: #81256c;
+  font-size: 1em;
+  font-weight: 600;
+  background-size: 100% 100%;
+  color: #fff;
+  border-radius: 20px;
+  box-shadow: 0 0 0 3px #81256c inset;
+  width: 200px;
+  height: 50px;
+  /* margin-left: 50%; */
+  margin-top: 20px;
+  padding: 15px 50px;
+  /* transform: translate(-50%,-50%);  */
+  transition: all 0.3s ease-in-out;
+}
+/* #btnUpload{
+    position: relative !important;
+    display: block;
+  outline: none;
+  border: none;
+  background-color: #81256c;
+  font-size: 1em;
+  font-weight: 600;
+  background-size: 100% 100%;
+  color: #fff;
+  border-radius: 20px;
+  box-shadow: 0 0 0 3px #81256c inset;
+  width: 200px;
+  height: 50px;
+  /* margin-left: 50%; */
+  margin-top: 20px;
+  /* transform: translate(-50%,-50%);  */
+  transition: all 0.3s ease-in-out;
+} */
+.lblbtnUpload:hover{
+    cursor: pointer;
+    background-color: #fff;
+    border: #fff solid 2px;
+    color: #000;
+    transition: all 0.3s ease-in-out;
+}
+#byte_content {
+    margin: 5px 0;
+    border: solid 1px #777777;
+    max-height: 600px;
+    max-width: 750px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
