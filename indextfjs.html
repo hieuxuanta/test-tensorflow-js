@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
+    <link rel="stylesheet" href="css/style.css" />
   </head>
 
   <body>
@@ -13,6 +14,28 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.0.2/dist/tfjs-vis.umd.min.js"></script>
 
     <h2>Hello, tsjs here. Welcome and Have a good day :D</h2>
+    <form action="javascript:;" onsubmit="run()">
+      <button id="btnDownload" onclick="eximModel(model)">Download model</button>
+      <!-- <button type=""  onclick="#"></button> -->
+      <!-- <label class="lblbtnUpload" for="btnUpload">Upload model</label> -->
+      Upload JSON file<input id="btnUploadJSON" type="file" accept="json" /><br />
+      Upload Bin file<input id="btnUploadBin" type="file" accept="bin" /><br />
+      <input
+        type="submit"
+        style="width: 200px; height: 30px; margin-top: 10px"
+      />
+      
+    </form><br>
+    <span class="readBytesButtons">
+      <button>Read file</button>
+    </span><br>
+      <br />
+      <hr />
+      <br />
+      <div id="byte_range"></div>
+      <div id="byte_content">The result is: ...</div>
+      
+    
 
     <!-- Import the main script file -->
     <script src="js/tf.js"></script>
