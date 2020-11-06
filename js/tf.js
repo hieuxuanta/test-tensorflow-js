@@ -1,3 +1,9 @@
+// TODO: Binding sự kiệN hết ở đây
+
+// TODO: Các hàm thực thi
+
+// TODO: Các hàm logic
+
 // START---
 // import * as tf from "@tensorflow/tfjs";
 
@@ -25,11 +31,10 @@ async function getData() {
     }))
     .filter((car) => car.mpg != null && car.horsepower != null);
   // console.log(cleaned);
-  cleanedTest = testingData
-    .map((car) => ({
-      mpg: car.Miles_per_Gallon,
-      horsepower: car.Horsepower,
-    }));
+  cleanedTest = testingData.map((car) => ({
+    mpg: car.Miles_per_Gallon,
+    horsepower: car.Horsepower,
+  }));
   return cleaned;
 }
 
@@ -43,11 +48,10 @@ function createModel() {
 
   //bz--I'll try to add some hidden layers
 
-  
-  model.add(tf.layers.dense({units: 60, activation: 'relu'}));
+  model.add(tf.layers.dense({ units: 20, activation: "relu" }));
   //omg, when I add the above layer, it predicted so great. But how did it work?
   //But, it's randomly true and false. The predicted result is not in the true path usually.
-  
+  // model.add(tf.layers.dense({units: 60, activation: 'linear'}));
 
   // Add an output layer
   model.add(tf.layers.dense({ units: 1, useBias: true }));
@@ -55,25 +59,91 @@ function createModel() {
   return model;
 }
 
+//Upload model
+async function uploadModel() {
+  const uploadJSONInput = document.getElementById("btnUploadJSON");
+  const uploadWeightsInput = document.getElementById("btnUploadBin");
+  const model = await tf.loadLayersModel(
+    tf.io.browserFiles([uploadJSONInput.files[0], uploadWeightsInput.files[0]])
+  );
+  console.log("Finish build model");
+  return model;
+}
+//End-upload model
+
+//Read file from upload
+// function convertFileToJson() {
+//   function readBlob(opt_startByte, opt_stopByte) {
+//     var files = document.getElementById("btnUploadJSON").files;
+//     if (!files.length) {
+//       alert("Please select a file!");
+//       return;
+//     }
+
+//     var file = files[0];
+//     var start = parseInt(opt_startByte) || 0;
+//     var stop = parseInt(opt_stopByte) || file.size - 1;
+
+//     var reader = new FileReader();
+
+//     // If we use onloadend, we need to check the readyState.
+//     reader.onloadend = function (evt) {
+//       if (evt.target.readyState == FileReader.DONE) {
+//         // DONE == 2
+//         // document.getElementById("byte_content").textContent = evt.target.result;
+//         let resultContent = document.getElementById("byte_content");
+//         resultContent.textContent = evt.target.result;
+//         // console.log(resultContent.textContent);
+//         // document.getElementById("byte_range").textContent = [
+//         //   "Read bytes: ",
+//         //   start + 1,
+//         //   " - ",
+//         //   stop + 1,
+//         //   " of ",
+//         //   file.size,
+//         //   " byte file",
+//         // ].join("");
+//       }
+//     };
+
+//     var blob = file.slice(start, stop + 1);
+//     reader.readAsBinaryString(blob);
+//   }
+
+//   document.querySelector(".readBytesButtons").addEventListener(
+//     "click",
+//     function (eventt) {
+//       if (eventt.target.tagName.toLowerCase() == "button") {
+//         var startByte = eventt.target.getAttribute("data-startbyte");
+//         var endByte = eventt.target.getAttribute("data-endbyte");
+//         readBlob(startByte, endByte);
+//       }
+//     },
+//     false
+//   );
+// }
+
+//end-read file from upload
+
 // 5. Prepare the data for training
 /**
- * Convert the input data to tensors that we can use for 
+ * Convert the input data to tensors that we can use for
  * machine learning.
  * Do practices of _shuffing_ the data and _normalizing_ the data
  * MPG on the y-axis
  */
-function convertToTensor(data){
+function convertToTensor(data) {
   // Wrapping these calculations in a tidy will dispose any
   // intermediate tensors
 
   return tf.tidy(() => {
     // Step 1. Shuffle the data
     tf.util.shuffle(data);
-    
+
     // Step 2. Convert data to Tensor
-    const inputs = data.map(d => d.horsepower);
+    const inputs = data.map((d) => d.horsepower);
     // alert("This is input \n" + inputs);
-    const labels = data.map(d => d.mpg);
+    const labels = data.map((d) => d.mpg);
 
     const inputTensor = tf.tensor2d(inputs, [inputs.length, 1]); // Convert to tensor .tensor2d(<array>,<shape_with_param_rowthencol-optional>,<dtype-optional>)
     // alert("This is inputTensor \n" + inputTensor);
@@ -85,8 +155,12 @@ function convertToTensor(data){
     const labelMax = labelTensor.max();
     const labelMin = labelTensor.min();
 
-    const normalizedInputs = inputTensor.sub(inputMin).div(inputMax.sub(inputMin));
-    const normalizedLabels = labelTensor.sub(labelMin).div(labelMax.sub(labelMin));
+    const normalizedInputs = inputTensor
+      .sub(inputMin)
+      .div(inputMax.sub(inputMin));
+    const normalizedLabels = labelTensor
+      .sub(labelMin)
+      .div(labelMax.sub(labelMin));
 
     return {
       inputs: normalizedInputs,
@@ -96,39 +170,43 @@ function convertToTensor(data){
       inputMin,
       labelMax,
       labelMin,
-    }
+    };
   });
 }
 
+//Download model
+async function eximModel(model) {
+  const saveResult = await model.save("downloads://model");
+}
+//End-download model
 
 // 6. Train the model
-async function trainModel(model, inputs, labels){
+async function trainModel(model, inputs, labels) {
   // Prepare the model for training
   model.compile({
     optimizer: tf.train.adam(),
     loss: tf.losses.meanSquaredError,
-    metrics: ['mse'],
+    metrics: ["mse"],
   });
 
-  const batchSize = 25;
-  const epochs = 50;
-  
+  const batchSize = 60;
+  const epochs = 55;
+
   return await model.fit(inputs, labels, {
     batchSize,
     epochs,
     shuffle: true,
     callbacks: tfvis.show.fitCallbacks(
-      {name: 'Training Performance'},
-      ['loss', 'mse'],
-      {height: 200, callbacks: ['onEpochEnd']}
-    )
-  })
+      { name: "Training Performance" },
+      ["loss", "mse"],
+      { height: 200, callbacks: ["onEpochEnd"] }
+    ),
+  });
 }
 
-
 // 7. Make predictions
-function testModel(model, inputData, inputDataTesting, normalizationData){
-  const {inputMax, inputMin, labelMax, labelMin} = normalizationData;
+function testModel(model, inputData, inputDataTesting, normalizationData) {
+  const { inputMax, inputMin, labelMax, labelMin } = normalizationData;
 
   // Generate predictions for a uniform range of numbers between 0 and 1;
   // We un-normalize the data by doing the inverse of the min-max scaling we did earlier.
@@ -136,41 +214,41 @@ function testModel(model, inputData, inputDataTesting, normalizationData){
     const xs = tf.linspace(0, 1, 100); //generate 100 examples
     const preds = model.predict(xs.reshape([100, 1]));
 
-    const unNormXs = xs
-      .mul(inputMax.sub(inputMin))
-      .add(inputMin);
-    
-    const unNormPreds = preds
-      .mul(labelMax.sub(labelMin))
-      .add(labelMin);
-    
+    const unNormXs = xs.mul(inputMax.sub(inputMin)).add(inputMin);
+
+    const unNormPreds = preds.mul(labelMax.sub(labelMin)).add(labelMin);
+
     // Un-normalize the data
     return [unNormXs.dataSync(), unNormPreds.dataSync()];
   });
 
   const predictedPoints = Array.from(xs).map((val, i) => {
-    return {x: val, y: preds[i]}
+    return { x: val, y: preds[i] };
   });
 
-  const originalPointsTraining = inputData.map(d => ({
-    x: d.horsepower, y: d.mpg,
+  const originalPointsTraining = inputData.map((d) => ({
+    x: d.horsepower,
+    y: d.mpg,
   }));
 
-  const originalPointsTesting = inputDataTesting.map(d => ({
-    x: d.horsepower, y: d.mpg,
+  const originalPointsTesting = inputDataTesting.map((d) => ({
+    x: d.horsepower,
+    y: d.mpg,
   }));
 
   tfvis.render.scatterplot(
-    {name: 'Model Predictions vs Original Data (Training & Testing)'},
-    {values: [originalPointsTraining, originalPointsTesting, predictedPoints], series: ['origTraining', 'origTesting', 'predicted']},
+    { name: "Model Predictions vs Original Data (Training & Testing)" },
     {
-      xLabel: 'Horsepower',
-      yLabel: 'MPG',
-      heigth: 300
+      values: [originalPointsTraining, originalPointsTesting, predictedPoints],
+      series: ["origTraining", "origTesting", "predicted"],
+    },
+    {
+      xLabel: "Horsepower",
+      yLabel: "MPG",
+      heigth: 300,
     }
   );
 }
-
 
 // END---
 // This part is to end the file. His target is on the point of running program (like a main() function), including plotting on the webpage (visualize)
@@ -193,16 +271,24 @@ async function run() {
   );
 
   // Create the model
-  const model = createModel();
+  // const model = createModel();
+
+  //Upload model from local
+  const model = await uploadModel();
+  console.log(model)
+
   tfvis.show.modelSummary({ name: "Model Summary" }, model);
 
   // Convert the data to a form we can use for training
   const tensorData = convertToTensor(data);
-  const {inputs, labels} = tensorData;
+  const { inputs, labels } = tensorData;
+
+  //Save model
+  await eximModel(model);
 
   // Train the model
   await trainModel(model, inputs, labels);
-  console.log('Done Training.....');
+  console.log("Done Training.....");
 
   // Make some predictions using the model and compare them to the original data
   testModel(model, data, cleanedTest, tensorData);
@@ -210,24 +296,5 @@ async function run() {
 
 document.addEventListener("DOMContentLoaded", run);
 
-
-
 //----------------
-/*
-// Define a model for linear regression.
-const model = tf.sequential();
-model.add(tf.layers.dense({ units: 1, inputShape: [1] }));
 
-model.compile({ loss: "meanSquaredError", optimizer: "sgd" });
-
-// Generate some synthetic data for training.
-const xs = tf.tensor2d([1, 2, 3, 4], [4, 1]);
-const ys = tf.tensor2d([1, 3, 5, 7], [4, 1]);
-
-// Train the model using the data.
-model.fit(xs, ys, { epochs: 10 }).then(() => {
-  // Use the model to do inference on a data point the model hasn't seen before:
-  model.predict(tf.tensor2d([5], [1, 1])).print();
-  // Open the browser devtools to see the output
-});
-*/
