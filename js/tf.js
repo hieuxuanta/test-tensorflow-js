@@ -1,17 +1,56 @@
-// TODO: Binding sự kiệN hết ở đây
+// TODO: Binding sự kiện
+document.addEventListener("DOMContentLoaded", run);
 
 // TODO: Các hàm thực thi
+// END---
+// MAIN PROCESSING
+async function run() {
+  //Load and plot the original input data that we are goin to train on
+  const data = await getData();
+  const values = data.map((d) => ({
+    x: d.horsepower,
+    y: d.mpg,
+  }));
+
+  tfvis.render.scatterplot(
+    { name: "Horsepower v MPG" },
+    { values },
+    {
+      xLabel: "Horsepower",
+      yLabel: "MPG",
+      height: 300,
+    }
+  );
+
+  // Create the model
+  // const model = createModel();
+
+  //Upload model from local
+  const model = await uploadModel();
+  console.log(model);
+
+  tfvis.show.modelSummary({ name: "Model Summary" }, model);
+
+  // Convert the data to a form we can use for training
+  const tensorData = convertToTensor(data);
+  const { inputs, labels } = tensorData;
+
+  // Train the model
+  await trainModel(model, inputs, labels);
+  console.log("Done Training. Model will be downloaded soon. Please wait!");
+  alert("Done Training. Model will be downloaded soon. Please wait!");
+
+  //Save model
+  eximModel(model);
+  
+
+  // Make some predictions using the model and compare them to the original data
+  testModel(model, data, cleanedTest, tensorData);
+}
 
 // TODO: Các hàm logic
-
 // START---
-// import * as tf from "@tensorflow/tfjs";
-
-// 3. Load, format and visualize the input data
-/**
- * Get the car data reduced to just the variables we are interested
- * and cleaned of missing data.
- */
+// 1. Load, format and visualize the input data
 var testingData = [];
 var cleanedTest = [];
 async function getData() {
@@ -37,8 +76,8 @@ async function getData() {
   }));
   return cleaned;
 }
-
-// 4. Define the model architecture
+// 2. Define the model architecture
+// 2.1. Create model by hand
 function createModel() {
   // Create a sequential model
   const model = tf.sequential();
@@ -50,7 +89,7 @@ function createModel() {
 
   model.add(tf.layers.dense({ units: 20, activation: "relu" }));
   //omg, when I add the above layer, it predicted so great. But how did it work?
-  //But, it's randomly true and false. The predicted result is not in the true path usually.
+  //Hmm, it's randomly true or false. The predicted result is not in the true path usually.
   // model.add(tf.layers.dense({units: 60, activation: 'linear'}));
 
   // Add an output layer
@@ -58,8 +97,7 @@ function createModel() {
 
   return model;
 }
-
-//Upload model
+// 2.2. Upload model
 async function uploadModel() {
   const uploadJSONInput = document.getElementById("btnUploadJSON");
   const uploadWeightsInput = document.getElementById("btnUploadBin");
@@ -69,69 +107,7 @@ async function uploadModel() {
   console.log("Finish build model");
   return model;
 }
-//End-upload model
-
-//Read file from upload
-// function convertFileToJson() {
-//   function readBlob(opt_startByte, opt_stopByte) {
-//     var files = document.getElementById("btnUploadJSON").files;
-//     if (!files.length) {
-//       alert("Please select a file!");
-//       return;
-//     }
-
-//     var file = files[0];
-//     var start = parseInt(opt_startByte) || 0;
-//     var stop = parseInt(opt_stopByte) || file.size - 1;
-
-//     var reader = new FileReader();
-
-//     // If we use onloadend, we need to check the readyState.
-//     reader.onloadend = function (evt) {
-//       if (evt.target.readyState == FileReader.DONE) {
-//         // DONE == 2
-//         // document.getElementById("byte_content").textContent = evt.target.result;
-//         let resultContent = document.getElementById("byte_content");
-//         resultContent.textContent = evt.target.result;
-//         // console.log(resultContent.textContent);
-//         // document.getElementById("byte_range").textContent = [
-//         //   "Read bytes: ",
-//         //   start + 1,
-//         //   " - ",
-//         //   stop + 1,
-//         //   " of ",
-//         //   file.size,
-//         //   " byte file",
-//         // ].join("");
-//       }
-//     };
-
-//     var blob = file.slice(start, stop + 1);
-//     reader.readAsBinaryString(blob);
-//   }
-
-//   document.querySelector(".readBytesButtons").addEventListener(
-//     "click",
-//     function (eventt) {
-//       if (eventt.target.tagName.toLowerCase() == "button") {
-//         var startByte = eventt.target.getAttribute("data-startbyte");
-//         var endByte = eventt.target.getAttribute("data-endbyte");
-//         readBlob(startByte, endByte);
-//       }
-//     },
-//     false
-//   );
-// }
-
-//end-read file from upload
-
-// 5. Prepare the data for training
-/**
- * Convert the input data to tensors that we can use for
- * machine learning.
- * Do practices of _shuffing_ the data and _normalizing_ the data
- * MPG on the y-axis
- */
+// 3. Prepare the data for training
 function convertToTensor(data) {
   // Wrapping these calculations in a tidy will dispose any
   // intermediate tensors
@@ -173,14 +149,7 @@ function convertToTensor(data) {
     };
   });
 }
-
-//Download model
-async function eximModel(model) {
-  const saveResult = await model.save("downloads://model");
-}
-//End-download model
-
-// 6. Train the model
+// 4. Train the model
 async function trainModel(model, inputs, labels) {
   // Prepare the model for training
   model.compile({
@@ -203,8 +172,15 @@ async function trainModel(model, inputs, labels) {
     ),
   });
 }
-
-// 7. Make predictions
+// 5. Download model
+async function eximModel(model) {
+  const saveResult = await document.getElementById("btnDownload").addEventListener("click", function(){
+    model.save("downloads://model");
+  });
+  // const saveResult = await model.save("downloads://model");
+  return saveResult;
+}
+// 6. Make predictions
 function testModel(model, inputData, inputDataTesting, normalizationData) {
   const { inputMax, inputMin, labelMax, labelMin } = normalizationData;
 
@@ -250,51 +226,54 @@ function testModel(model, inputData, inputDataTesting, normalizationData) {
   );
 }
 
-// END---
-// This part is to end the file. His target is on the point of running program (like a main() function), including plotting on the webpage (visualize)
-async function run() {
-  //Load and plot the original input data that we are goin to train on
-  const data = await getData();
-  const values = data.map((d) => ({
-    x: d.horsepower,
-    y: d.mpg,
-  }));
+//--------------Additional Functions----------------
+// import * as tf from "@tensorflow/tfjs";
+//Read file from upload
+function readBlob(opt_startByte, opt_stopByte) {
+  var files = document.getElementById("btnUploadJSON").files;
+  if (!files.length) {
+    alert("Please select a file!");
+    return;
+  }
 
-  tfvis.render.scatterplot(
-    { name: "Horsepower v MPG" },
-    { values },
-    {
-      xLabel: "Horsepower",
-      yLabel: "MPG",
-      height: 300,
+  var file = files[0];
+  var start = parseInt(opt_startByte) || 0;
+  var stop = parseInt(opt_stopByte) || file.size - 1;
+
+  var reader = new FileReader();
+
+  // If we use onloadend, we need to check the readyState.
+  reader.onloadend = function (evt) {
+    if (evt.target.readyState == FileReader.DONE) {
+      // DONE == 2
+      // document.getElementById("byte_content").textContent = evt.target.result;
+      let resultContent = document.getElementById("byte_content");
+      resultContent.textContent = evt.target.result;
+      // console.log(resultContent.textContent);
+      // document.getElementById("byte_range").textContent = [
+      //   "Read bytes: ",
+      //   start + 1,
+      //   " - ",
+      //   stop + 1,
+      //   " of ",
+      //   file.size,
+      //   " byte file",
+      // ].join("");
     }
-  );
+  };
 
-  // Create the model
-  // const model = createModel();
-
-  //Upload model from local
-  const model = await uploadModel();
-  console.log(model)
-
-  tfvis.show.modelSummary({ name: "Model Summary" }, model);
-
-  // Convert the data to a form we can use for training
-  const tensorData = convertToTensor(data);
-  const { inputs, labels } = tensorData;
-
-  //Save model
-  await eximModel(model);
-
-  // Train the model
-  await trainModel(model, inputs, labels);
-  console.log("Done Training.....");
-
-  // Make some predictions using the model and compare them to the original data
-  testModel(model, data, cleanedTest, tensorData);
+  var blob = file.slice(start, stop + 1);
+  reader.readAsBinaryString(blob);
 }
-
-document.addEventListener("DOMContentLoaded", run);
-
-//----------------
-
+document.querySelector(".readBytesButtons").addEventListener(
+  "click",
+  function (eventt) {
+    if (eventt.target.tagName.toLowerCase() == "button") {
+      var startByte = eventt.target.getAttribute("data-startbyte");
+      var endByte = eventt.target.getAttribute("data-endbyte");
+      readBlob(startByte, endByte);
+    }
+  },
+  false
+);
+//end-read file from upload
