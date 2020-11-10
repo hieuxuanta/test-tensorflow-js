@@ -14,8 +14,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.0.2/dist/tfjs-vis.umd.min.js"></script>
 
     <h2>Hello, tsjs here. Welcome and Have a good day :D</h2>
+    <button id="btnDownload" onclick="eximModel(model)">Download model</button>
+    <a href="eximModel(model)"></a>
     <form action="javascript:;" onsubmit="run()">
-      <button id="btnDownload" onclick="eximModel(model)">Download model</button>
       <!-- <button type=""  onclick="#"></button> -->
       <!-- <label class="lblbtnUpload" for="btnUpload">Upload model</label> -->
       Upload JSON file<input id="btnUploadJSON" type="file" accept="json" /><br />
@@ -39,5 +40,10 @@
 
     <!-- Import the main script file -->
     <script src="js/tf.js"></script>
+
+    <script
+    type="text/javascript"
+    src="http://code.jquery.com/jquery-1.7.1.min.js"
+  ></script>
   </body>
 </html>
